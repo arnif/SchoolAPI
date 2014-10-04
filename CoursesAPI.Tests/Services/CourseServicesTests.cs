@@ -84,7 +84,15 @@ namespace CoursesAPI.Tests.Services
                     PersonSSN = "1",
                 }
             };
-
+            var courseStudent = new List<CourseStudent> { 
+                new CourseStudent{
+                    ID = 1,
+                    SSN = "1",
+                    CourseInstanceID = 1,
+                    Status = 1,
+                }
+            };
+            _uow.SetRepositoryData(courseStudent);
             _uow.SetRepositoryData(grade);
             _uow.SetRepositoryData(person);
             _uow.SetRepositoryData(projectGroup);
@@ -196,15 +204,26 @@ namespace CoursesAPI.Tests.Services
             Assert.AreEqual("1", bla.SSN);
 
         }
+        [TestMethod]
         public void GetAllGradesFromProjectGroupTestCorrectOutput()
         {
             // Arrange:
+            ProjectViewModel temp = new ProjectViewModel();
+            temp.Name = "1";
+            temp.MinGradeToPassCourse = 1;
+            temp.OnlyHigherThanProjectID = 1;
+            temp.Weight = 1;
+           
 
-
+            AddProjectGroupViewModel temp2 = new AddProjectGroupViewModel();
+            temp2.Name = "1";
+            temp2.GradedProjectsCount = 1;
+            _service.AddToProjectGroup(temp2);
+            _service.AddProject(1, 1, temp);
             // Act:
             var blah = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList.GetEnumerator().Current.SSN;
 
-
+            Debug.WriteLine(blah.ToString());
             // Assert:
             Assert.AreEqual("1", blah);
 
