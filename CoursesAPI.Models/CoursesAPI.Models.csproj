@@ -47,6 +47,7 @@
     <Compile Include="GradeDTO.cs" />
     <Compile Include="GradesFromProjectsDTO.cs" />
     <Compile Include="GradeViewModel.cs" />
+    <Compile Include="PersonsDTO.cs" />
     <Compile Include="ProjectDTO.cs" />
     <Compile Include="ProjectGroupDTO.cs" />
     <Compile Include="ProjectViewModel.cs" />

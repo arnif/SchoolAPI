@@ -11,6 +11,7 @@ namespace CoursesAPI.Models
         public float FinalGrade { get; set; }
         public int PlaceInStudents { get; set; }
         public List<GradesFromProjectsDTO> GradesList { get; set; }
+        public PersonsDTO Person { get; set; }
         public bool DidPass { get; set; }
         public bool DidPassExam { get; set; }
     }

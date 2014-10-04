@@ -21,6 +21,9 @@ namespace CoursesAPI.Services.Services
         private readonly IRepository<Project> _projects;
         private readonly IRepository<Grade> _grades;
         private readonly IRepository<ProjectGroup> _projectGroups;
+        private readonly IRepository<CourseStudent> _courseStudents;
+
+        private float globalTotalWeight = 0;
 
 		public CoursesServiceProvider(IUnitOfWork uow)
 		{
@@ -34,6 +37,7 @@ namespace CoursesAPI.Services.Services
             _projects             = _uow.GetRepository<Project>();
             _grades               = _uow.GetRepository<Grade>();
             _projectGroups        = _uow.GetRepository<ProjectGroup>();
+            _courseStudents       = _uow.GetRepository<CourseStudent>();
 		}
 
 		public List<Person> GetCourseTeachers(int courseInstanceID)
@@ -227,6 +231,7 @@ namespace CoursesAPI.Services.Services
 
         public GradesFromProjectsDTO GetAllGradesFromProjectGroup(int courseInstanceID, int projectGroupID, string ssn)
         {
+            var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, ssn);
             var student = _persons.GetPersonBySSN(ssn);
             var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
             var projectGroup = _projectGroups.GetProjectGroupByID(projectGroupID);
@@ -236,7 +241,7 @@ namespace CoursesAPI.Services.Services
                             select p).ToList();
 
             var grades = _grades.GetGradesFromStudent(ssn);
-
+            
             /*
             var selectedProjects = (from r in _projects.All()
                     join k in _grades.All() on r.ID equals k.ProjectID
@@ -312,8 +317,6 @@ namespace CoursesAPI.Services.Services
                 }
             }
 
-
-
             //X af y bestu gilda utreikningar
             if (projectGroup.GradedProjectsCount != 0)
             {
@@ -334,12 +337,10 @@ namespace CoursesAPI.Services.Services
                 }
             }
 
-
-
-
             average = average / numberOfProjects;
 
             float aquiredGrade = ((float)totalWeight / 100) * average;
+            globalTotalWeight += totalWeight;
 
             return new GradesFromProjectsDTO
             {
@@ -354,6 +355,7 @@ namespace CoursesAPI.Services.Services
 
         public FinalGradeDTO NewGetGradesFromCourse(int courseInstanceID, string ssn)
         {
+            var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, ssn);
             var student = _persons.GetPersonBySSN(ssn);
             var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
             var projectCourses = _projects.GetAllProjectsInCourseByCourseID(courseInstanceID);
@@ -375,7 +377,7 @@ namespace CoursesAPI.Services.Services
 
             var didPassExam = true;
             var didPass = true;
-            var otherShouldCount = false;
+        
             int? removeThisProject = null;
             float totalGrade = 0;
             foreach (GradesFromProjectsDTO g in listGradesFromProjects)
@@ -391,22 +393,9 @@ namespace CoursesAPI.Services.Services
                         didPassExam = true;
                         removeThisProject = grade.Project.OnlyHigherThanProjectID;
                     }
-                    else if (grade.Project.MinGradeToPassCourse == null && grade.Project.OnlyHigherThanProjectID != null)
-                    {
-                        var project = _projects.GetProjectByID((int)grade.Project.OnlyHigherThanProjectID);
-                        var gradeInOther = _grades.GetGradeByProjectID(project.ID, ssn);
-                        if (gradeInOther.ProjectGrade > grade.ProjectGrade)
-                        {
-                            //otherShouldCount = true;
-                            //totalGrade -= g.AquiredGrade;
-                        }
-                        else
-                        {
-                            //otherShouldCount = false;
-                        }
-                    }
 
                 }
+
                 if (didPassExam)
                 {
                     totalGrade += g.AquiredGrade;
@@ -430,143 +419,51 @@ namespace CoursesAPI.Services.Services
 
             float newValue = Convert.ToSingle(d);
 
+            if (float.IsNaN(newValue))
+            {
+                return new FinalGradeDTO
+                {
+
+                };
+            }
+
+
+            
             return new FinalGradeDTO
             {
                 DidPass = didPass,
                 DidPassExam = didPassExam,
                 GradesList = listGradesFromProjects,
-                FinalGrade = newValue
+                FinalGrade = newValue,
+                Person = new PersonsDTO {
+                    Email = student.Email,
+                    ID = student.ID,
+                    Name = student.Name,
+                    SSN = student.SSN
+                }
 
 
             };
         }
 
-        public FinalGradeDTO GetGradesFromCourse(int courseInstanceID, string ssn)
-        {
-            var student = _persons.GetPersonBySSN(ssn);
-            var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
+        public List<FinalGradeDTO> GetGradesFromAllStudentsInCourse(int courseInstanceID)
+        {            
+            var returnList = new List<FinalGradeDTO>();
 
-            var projectCourses = _projects.GetAllProjectsInCourseByCourseID(courseInstanceID);
+            var studentsInCourse = (from s in _courseStudents.All()
+                                   where s.CourseInstanceID == courseInstanceID
+                                   select s).ToList();
 
-            var grades = _grades.GetGradesFromStudent(ssn);
-
-            var gradesFromProject = new Dictionary<Project, Grade>();
-            var failedProjects = new Dictionary<Project, Grade>();
-            var gradeDTO = new List<GradeDTO>();
-
-            float totalGrade = 0;
-            bool didPass = true;
- 
-            foreach (Project p in projectCourses)
+            foreach (CourseStudent s in studentsInCourse)
             {
-                foreach(Grade g in grades) {
-                    if (g.ProjectID == p.ID)
-                    {
-                        //student has a grade in this project!                        
-                        if (p.MinGradeToPassCourse != null && ((float)p.MinGradeToPassCourse / 10) > g.ProjectGrade)
-                        {
-                            didPass = false;
-                            failedProjects.Add(p, g);
-                        }
-                        else if (p.OnlyIfHigherThanProjectID != null) {
-   
-                            foreach (KeyValuePair<Project, Grade> entry in failedProjects)
-                            {
-                                if (entry.Key.ID == p.OnlyIfHigherThanProjectID)
-                                {
-                                    if (g.ProjectGrade > entry.Value.ProjectGrade && g.ProjectGrade > ((float)p.MinGradeToPassCourse/10))
-                                    {
-                                        didPass = true;
-                                        totalGrade += g.ProjectGrade * ((float)p.Weight / 100);
-                                        var projectGroup = _projectGroups.GetProjectGroupByID(p.ProjectGroupID);
-                                        gradeDTO.Add(new GradeDTO
-                                        {
-                                            Project = new ProjectDTO
-                                            {
-                                                CourseInstance = new CourseInstanceSimpleDTO
-                                                {
-                                                    CourseID = course.CourseID,
-                                                    ID = course.ID,
-                                                    Semester = course.SemesterID
-                                                },
-                                                ID = p.ID,
-                                                MinGradeToPassCourse = p.MinGradeToPassCourse,
-                                                OnlyHigherThanProjectID = p.OnlyIfHigherThanProjectID,
-                                                ProjectGroup = new ProjectGroupDTO
-                                                {
-                                                    GradedProjectsCount = projectGroup.GradedProjectsCount,
-                                                    ID = projectGroup.ID,
-                                                    Name = projectGroup.Name
-                                                },
-                                                Weight = p.Weight
-                                            },
-                                            ProjectGrade = g.ProjectGrade,
-                                            ProjectName = p.Name,
-                                            SSN = student.SSN,                                            
-                                        });
-                                    }
-                                    
-                                }
-                            }
-                        }
-                        else
-                        {
-                            gradesFromProject.Add(p, g);
-                            totalGrade += g.ProjectGrade * ((float)p.Weight / 100);
-                            var projectGroup = _projectGroups.GetProjectGroupByID(p.ProjectGroupID);
-                            gradeDTO.Add(new GradeDTO
-                                        {
-                                            Project = new ProjectDTO
-                                            {
-                                                CourseInstance = new CourseInstanceSimpleDTO
-                                                {
-                                                    CourseID = course.CourseID,
-                                                    ID = course.ID,
-                                                    Semester = course.SemesterID
-                                                },
-                                                ID = p.ID,
-                                                MinGradeToPassCourse = p.MinGradeToPassCourse,
-                                                OnlyHigherThanProjectID = p.OnlyIfHigherThanProjectID,
-                                                ProjectGroup = new ProjectGroupDTO
-                                                {
-                                                    GradedProjectsCount = projectGroup.GradedProjectsCount,
-                                                    ID = projectGroup.ID,
-                                                    Name = projectGroup.Name
-                                                },
-                                                Weight = p.Weight
-                                            },
-                                            ProjectGrade = g.ProjectGrade,
-                                            ProjectName = p.Name,
-                                            SSN = student.SSN,                                            
-                                        });
-                        }                                                                        
-                        
-                    }
-                }
+                globalTotalWeight = 0;
+                returnList.Add(NewGetGradesFromCourse(courseInstanceID, s.SSN));
+                System.Diagnostics.Debug.WriteLine(globalTotalWeight);
                 
             }
-
-            if (totalGrade > 10)
-            {
-                totalGrade = 10;
-            }
-
-            if (totalGrade < 4.75)
-            {
-                didPass = false;
-            }
-
-            double d = Math.Round(totalGrade * 2) / 2;           
-
-            float newValue = Convert.ToSingle(d);
-                    
-            return new FinalGradeDTO
-            {
-                DidPass = didPass,
-                FinalGrade = newValue,
-                PlaceInStudents = 0                
-            };
             
+            return returnList;
         }
+       
     }
 }

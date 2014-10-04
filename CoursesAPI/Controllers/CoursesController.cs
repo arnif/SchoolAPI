@@ -73,5 +73,12 @@ namespace CoursesAPI.Controllers
         {            
             return Request.CreateResponse(HttpStatusCode.OK, _service.NewGetGradesFromCourse(courseInstanceID, ssn));
         }
+
+        [HttpGet]
+        [Route("{courseInstanceID}/grades")]
+        public HttpResponseMessage GetAllGradesFromCourse(int courseInstanceID)
+        {
+            return Request.CreateResponse(HttpStatusCode.OK, _service.GetGradesFromAllStudentsInCourse(courseInstanceID));
+        }
 	}
 }
