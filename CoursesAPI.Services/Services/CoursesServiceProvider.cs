@@ -319,6 +319,7 @@ namespace CoursesAPI.Services.Services
                 }
             }
 
+
             //X af y bestu gilda utreikningar
             if (projectGroup.GradedProjectsCount != 0)
             {
@@ -328,19 +329,13 @@ namespace CoursesAPI.Services.Services
                 average = 0;
                 foreach (GradeDTO g in allProjects)
                 {
-
-
                     totalWeight += g.Project.Weight;
                     average += g.ProjectGrade;
-
-
-
                     numberOfProjects++;
                 }
             }
 
             average = average / numberOfProjects;
-
             float aquiredGrade = ((float)totalWeight / 100) * average;
             globalTotalWeight += totalWeight;
 
@@ -352,8 +347,6 @@ namespace CoursesAPI.Services.Services
                 GradeList = allProjects
             };
         }
-
-
 
         public FinalGradeDTO NewGetGradesFromCourse(int courseInstanceID, string ssn)
         {
@@ -389,6 +382,7 @@ namespace CoursesAPI.Services.Services
                     if (grade.Project.MinGradeToPassCourse != null && grade.ProjectGrade < ((float)grade.Project.MinGradeToPassCourse / 10))
                     {
                         didPassExam = false;
+                        globalTotalWeight -= grade.Project.Weight;
                     }
                     else if (grade.Project.MinGradeToPassCourse != null && grade.ProjectGrade > ((float)grade.Project.MinGradeToPassCourse / 10))
                     {
@@ -402,8 +396,6 @@ namespace CoursesAPI.Services.Services
                 {
                     totalGrade += g.AquiredGrade;
                 }
-
-
 
             }
 
@@ -429,20 +421,29 @@ namespace CoursesAPI.Services.Services
                 };
             }
 
+            float totalCourseWeight = GetTotalCourseWeight(courseInstanceID);
 
-            
+            if (totalCourseWeight <= 100f)
+            {
+                //course is not fully completed so final grade should not be given.
+                newValue = float.NaN;
+                didPassExam = false;
+            }
+
             return new FinalGradeDTO
             {
-                DidPass = didPass,
-                DidPassExam = didPassExam,
-                GradesList = listGradesFromProjects,
                 FinalGrade = newValue,
+                FinalWeight = globalTotalWeight,
                 Person = new PersonsDTO {
                     Email = student.Email,
                     ID = student.ID,
                     Name = student.Name,
                     SSN = student.SSN
-                }
+                },
+                DidPass = didPass,
+                DidPassExam = didPassExam,
+                GradesList = listGradesFromProjects
+                
 
 
             };
@@ -460,11 +461,24 @@ namespace CoursesAPI.Services.Services
             {
                 globalTotalWeight = 0;
                 returnList.Add(NewGetGradesFromCourse(courseInstanceID, s.SSN));
-                System.Diagnostics.Debug.WriteLine(globalTotalWeight);
                 
             }
             
             return returnList;
+        }
+
+        private float GetTotalCourseWeight(int courseInstanceID)
+        {
+            var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
+            var projects = _projects.GetAllProjectsInCourseByCourseID(course.ID);
+
+            float projectTotalWeight = 0;
+            foreach (Project p in projects)
+            {
+                projectTotalWeight += p.Weight;
+            }
+
+            return projectTotalWeight;
         }
        
     }
