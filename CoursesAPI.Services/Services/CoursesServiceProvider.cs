@@ -9,6 +9,9 @@ using CoursesAPI.Services.Extensions;
 
 namespace CoursesAPI.Services.Services
 {
+    /// <summary>
+    /// This Class provides data on courses, grades, teachers and students.
+    /// </summary>
 	public class CoursesServiceProvider
 	{
 		private readonly IUnitOfWork _uow;
@@ -39,7 +42,11 @@ namespace CoursesAPI.Services.Services
             _projectGroups        = _uow.GetRepository<ProjectGroup>();
             _courseStudents       = _uow.GetRepository<CourseStudent>();
 		}
-
+        /// <summary>
+        /// Returns a list of Teachers for the given course.
+        /// </summary>
+        /// <param name="courseInstanceID"></param>
+        /// <returns></returns>
 		public List<Person> GetCourseTeachers(int courseInstanceID)
 		{
             // TODO:
@@ -92,7 +99,6 @@ namespace CoursesAPI.Services.Services
 
             return result.OrderBy(c => c.Name).ToList();
 		}
-
         public ProjectGroupDTO AddToProjectGroup(AddProjectGroupViewModel model)
         {
             if (model.Name != null && model.Name.Length < 64)
