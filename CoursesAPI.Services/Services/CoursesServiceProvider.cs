@@ -174,6 +174,7 @@ namespace CoursesAPI.Services.Services
 
         public void AddGradeToProject(int courseInstanceID, int projectID, GradeViewModel model)
         {
+            var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, model.SSN);
             var student = _persons.GetPersonBySSN(model.SSN);
             var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
             var project = _projects.GetProjectByID(projectID);
@@ -191,6 +192,7 @@ namespace CoursesAPI.Services.Services
 
         public GradeDTO GetGrades(int courseInstanceID, int projectID, string ssn)
         {
+            var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, ssn);
             var student = _persons.GetPersonBySSN(ssn);
             var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
             var project = _projects.GetProjectByID(projectID);
