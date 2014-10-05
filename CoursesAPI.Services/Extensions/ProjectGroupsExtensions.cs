@@ -5,6 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using CoursesAPI.Services.DataAccess;
 using CoursesAPI.Services.Models.Entities;
+using System.Web;
+using System.Web;
+using System.Net.Http;
+using System.Web.Http;
+using System.Net;
 
 namespace CoursesAPI.Services.Extensions
 {
@@ -15,7 +20,12 @@ namespace CoursesAPI.Services.Extensions
             var projectGroup = repo.All().SingleOrDefault(p => p.ID == id);
             if (projectGroup == null)
             {
-                throw new ArgumentException("Project group not found, please try again.");
+
+                HttpResponseMessage h = new HttpResponseMessage();
+                h.ReasonPhrase = "Project group not found";
+                h.StatusCode = HttpStatusCode.NotFound;
+                throw new HttpResponseException(h);
+                
             }
             return projectGroup;
         }

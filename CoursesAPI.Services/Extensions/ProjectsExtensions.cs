@@ -5,6 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using CoursesAPI.Services.DataAccess;
 using CoursesAPI.Services.Models.Entities;
+using System.Web;
+using System.Net.Http;
+using System.Web.Http;
+using System.Net;
 
 namespace CoursesAPI.Services.Extensions
 {
@@ -15,7 +19,10 @@ namespace CoursesAPI.Services.Extensions
             var project = repo.All().SingleOrDefault(p => p.ID == id);
             if (project == null)
             {
-                throw new ArgumentException("Project not found, please try again.");
+                HttpResponseMessage h = new HttpResponseMessage();
+                h.ReasonPhrase = "Project not found";
+                h.StatusCode = HttpStatusCode.NotFound;
+                throw new HttpResponseException(h);
             }
             return project;
         }
@@ -27,7 +34,10 @@ namespace CoursesAPI.Services.Extensions
                             select p).ToList();
             if (projects == null)
             {
-                throw new ArgumentException("Projects not found, please try again.");
+                HttpResponseMessage h = new HttpResponseMessage();
+                h.ReasonPhrase = "Projects not found";
+                h.StatusCode = HttpStatusCode.NotFound;
+                throw new HttpResponseException(h);
             }
             return projects;
         }

@@ -128,14 +128,7 @@ namespace CoursesAPI.Services.Services
         public ProjectDTO AddProject(int courseInstanceID, int projectGroupID, ProjectViewModel model)
         {
             var courseInstance = _courseInstances.GetCourseInstanceByID(courseInstanceID);
-
-            var projectGroup = (from p in _projectGroups.All()
-                               where p.ID == projectGroupID
-                               select p).SingleOrDefault();
-
-            if (projectGroup == null) {
-                throw new ArgumentException("Project group not found, maybe you have not created it?");
-            }
+            var projectGroup = _projectGroups.GetProjectGroupByID(projectGroupID);
 
             var project = new Project
                 {
@@ -448,6 +441,7 @@ namespace CoursesAPI.Services.Services
         public List<FinalGradeDTO> GetGradesFromAllStudentsInCourse(int courseInstanceID)
         {            
             var returnList = new List<FinalGradeDTO>();
+            var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
 
             var studentsInCourse = (from s in _courseStudents.All()
                                    where s.CourseInstanceID == courseInstanceID
@@ -475,6 +469,19 @@ namespace CoursesAPI.Services.Services
             }
 
             return projectTotalWeight;
+        }
+
+        public bool CheckIfCorrectStudent(string ssn, string userName)
+        {
+            var student = _persons.GetPersonBySSN(ssn);
+            if (student.Email.Contains(userName))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

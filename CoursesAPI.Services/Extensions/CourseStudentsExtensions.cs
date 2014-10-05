@@ -5,6 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using CoursesAPI.Services.DataAccess;
 using CoursesAPI.Services.Models.Entities;
+using System.Web;
+using System.Net.Http;
+using System.Web.Http;
+using System.Net;
 
 namespace CoursesAPI.Services.Extensions
 {
@@ -19,7 +23,10 @@ namespace CoursesAPI.Services.Extensions
 
             if (student == null)
             {
-                throw new ArgumentException("Student not found, please try again.");
+                HttpResponseMessage h = new HttpResponseMessage();
+                h.ReasonPhrase = "Student not found";
+                h.StatusCode = HttpStatusCode.NotFound;
+                throw new HttpResponseException(h);
             }
 
             return student;
