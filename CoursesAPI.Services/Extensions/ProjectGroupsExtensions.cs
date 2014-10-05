@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using CoursesAPI.Services.DataAccess;
 using CoursesAPI.Services.Models.Entities;
 using System.Web;
-using System.Web;
 using System.Net.Http;
 using System.Web.Http;
 using System.Net;

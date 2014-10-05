@@ -9,9 +9,6 @@ using CoursesAPI.Services.Extensions;
 
 namespace CoursesAPI.Services.Services
 {
-    /// <summary>
-    /// This Class provides data on courses, grades, teachers and students.
-    /// </summary>
 	public class CoursesServiceProvider
 	{
 		private readonly IUnitOfWork _uow;
@@ -42,11 +39,6 @@ namespace CoursesAPI.Services.Services
             _projectGroups        = _uow.GetRepository<ProjectGroup>();
             _courseStudents       = _uow.GetRepository<CourseStudent>();
 		}
-        /// <summary>
-        /// Returns a list of Teachers for the given course.
-        /// </summary>
-        /// <param name="courseInstanceID"></param>
-        /// <returns></returns>
 		public List<Person> GetCourseTeachers(int courseInstanceID)
 		{
             // TODO:
@@ -78,7 +70,7 @@ namespace CoursesAPI.Services.Services
 
             return result.OrderBy(c => c.Name).ToList();
 		}
-
+        
 		public List<CourseInstanceDTO> GetSemesterCourses(string semester)
 		{
             if (String.IsNullOrEmpty(semester))
@@ -99,6 +91,7 @@ namespace CoursesAPI.Services.Services
 
             return result.OrderBy(c => c.Name).ToList();
 		}
+        
         public ProjectGroupDTO AddToProjectGroup(AddProjectGroupViewModel model)
         {
             if (model.Name != null && model.Name.Length < 64)
@@ -124,7 +117,6 @@ namespace CoursesAPI.Services.Services
                 throw new ArgumentException("Name is not legal (required and max length 64)");
             }            
         }
-
         public ProjectDTO AddProject(int courseInstanceID, int projectGroupID, ProjectViewModel model)
         {
             var courseInstance = _courseInstances.GetCourseInstanceByID(courseInstanceID);
@@ -168,7 +160,6 @@ namespace CoursesAPI.Services.Services
                 Weight = project.Weight
             };
         }
-
         public void AddGradeToProject(int courseInstanceID, int projectID, GradeViewModel model)
         {
             var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, model.SSN);
@@ -186,7 +177,6 @@ namespace CoursesAPI.Services.Services
             _grades.Add(grade);
             _uow.Save();
         }
-
         public GradeDTO GetGrades(int courseInstanceID, int projectID, string ssn)
         {
             var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, ssn);
@@ -227,7 +217,6 @@ namespace CoursesAPI.Services.Services
                 ProjectName = project.Name
             };
         }
-
         public GradesFromProjectsDTO GetAllGradesFromProjectGroup(int courseInstanceID, int projectGroupID, string ssn)
         {
             var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, ssn);
@@ -336,7 +325,6 @@ namespace CoursesAPI.Services.Services
                 GradeList = allProjects
             };
         }
-
         public FinalGradeDTO NewGetGradesFromCourse(int courseInstanceID, string ssn)
         {
             var courseStudent = _courseStudents.GetCourseStudent(courseInstanceID, ssn);
@@ -437,7 +425,6 @@ namespace CoursesAPI.Services.Services
 
             };
         }
-
         public List<FinalGradeDTO> GetGradesFromAllStudentsInCourse(int courseInstanceID)
         {            
             var returnList = new List<FinalGradeDTO>();
@@ -456,7 +443,6 @@ namespace CoursesAPI.Services.Services
             
             return returnList;
         }
-
         private float GetTotalCourseWeight(int courseInstanceID)
         {
             var course = _courseInstances.GetCourseInstanceByID(courseInstanceID);
