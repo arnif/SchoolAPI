@@ -9,6 +9,10 @@ using CoursesAPI.Services.Models.Entities;
 using CoursesAPI.Services.Extensions;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Web;
+using System.Net.Http;
+using System.Web.Http;
+using System.Net;
 
 
 namespace CoursesAPI.Tests.Services
@@ -38,12 +42,12 @@ namespace CoursesAPI.Tests.Services
                 new Project
                 {
                     ID = 1,
-                    Name = "1",
+                    Name = "ProjectCat",
                     ProjectGroupID = 1,
                     CourseInstanceID = 1,
-                    OnlyIfHigherThanProjectID = 1,
-                    Weight = 1,
-                    MinGradeToPassCourse = 1,
+                    OnlyIfHigherThanProjectID = null,
+                    Weight = 20,
+                    MinGradeToPassCourse = null,
                     
 
                 }
@@ -53,36 +57,36 @@ namespace CoursesAPI.Tests.Services
                 new CourseInstance{
                     ID = 1,
                     CourseID = "1",
-                    SemesterID = " "
+                    SemesterID = "20143"
                 }
             };
             var projectGroup = new List<ProjectGroup> { 
                 new ProjectGroup{
                     ID = 1,
-                    Name = "1",
-                    GradedProjectsCount = 0
+                    Name = "Assignments",
+                    GradedProjectsCount = 0,
                 }
             };
             var person = new List<Person> { 
                 new Person{
                     ID = 1,
-                    SSN = "1",
-                    Name = "1",
-                    Email = "1"
+                    SSN = "1701862149",
+                    Name = "Tomcat",
+                    Email = "theodor11@ru.is"
                 }
             };
             var grade = new List<Grade>{
                 new Grade{
                     ID = 1,
                     ProjectID = 1,
-                    ProjectGrade = 1,
-                    PersonSSN = "1",
+                    ProjectGrade = 10,
+                    PersonSSN = "1701862149",
                 }
             };
             var courseStudent = new List<CourseStudent> { 
                 new CourseStudent{
                     ID = 1,
-                    SSN = "1",
+                    SSN = "1701862149",
                     CourseInstanceID = 1,
                     Status = 1,
                 }
@@ -139,7 +143,7 @@ namespace CoursesAPI.Tests.Services
             Assert.AreEqual(temp.GradedProjectsCount, blah.GradedProjectsCount);
         }
         [TestMethod]
-        [ExpectedExceptionWithMessage(typeof(ArgumentException), "Project group not found, maybe you have not created it?")]
+        [ExpectedExceptionWithMessage(typeof(HttpResponseException), "Processing of the HTTP request resulted in an exception. Please see the HTTP response returned by the 'Response' property of this exception for details.")]
         public void AddProjectTestProjectGroupIsNull()
         {
             // Arrange:
@@ -173,15 +177,15 @@ namespace CoursesAPI.Tests.Services
             // Arrange:
             GradeViewModel model = new GradeViewModel();
             model.Grade = 10;
-            model.SSN = "1";
+            model.SSN = "1701862149";
 
             // Act:
                 // Count the number of grades before adding a new grade.
-            var firstCount = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList.Count;
+            var firstCount = _service.GetAllGradesFromProjectGroup(1, 1, "1701862149").GradeList.Count;
                 // Add the new grade.
             _service.AddGradeToProject(1, 1, model);
                 // Count the number of grades again.
-            float secondCount = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList.Count;
+            float secondCount = _service.GetAllGradesFromProjectGroup(1, 1, "1701862149").GradeList.Count;
 
             // Assert:
                 // Check if the number of grades has risen.
@@ -192,7 +196,7 @@ namespace CoursesAPI.Tests.Services
         public void GetGradesTestCorrectOutput()
         {
             // Arrange:
-            var ssn = "1";
+            var ssn = "1701862149";
 
             // Act:
             GradeDTO bla = _service.GetGrades(courseInstanceID, projectGroupID, ssn);
@@ -208,10 +212,10 @@ namespace CoursesAPI.Tests.Services
             // Arrange:
             
             // Act:
-            var blah = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList[0].SSN;
+            var blah = _service.GetAllGradesFromProjectGroup(1, 1, "1701862149").GradeList[0].SSN;
 
             // Assert:
-            Assert.AreEqual("1", blah);
+            Assert.AreEqual("1701862149", blah);
         }
         [TestMethod]
         public void NewGetGradesFromCourseTestCorrectOutput()
@@ -220,10 +224,10 @@ namespace CoursesAPI.Tests.Services
 
             // Act:
                 // Retrieve the SSN of the person with the grade.
-            var blah = _service.NewGetGradesFromCourse(1, "1").Person.SSN;
+            var blah = _service.NewGetGradesFromCourse(1, "1701862149").Person.SSN;
 
             // Assert:
-            Assert.AreEqual("1", blah);
+            Assert.AreEqual("1701862149", blah);
         }
         [TestMethod]
         public void GetGradesFromAllStudentsInCourseTestCorrectOutput()
@@ -234,8 +238,27 @@ namespace CoursesAPI.Tests.Services
                 // Retrieve the SSN of the student with the first grade.
             var blah = _service.GetGradesFromAllStudentsInCourse(1)[0].Person.SSN;
             // Assert:
-            Assert.AreEqual("1", blah);
+            Assert.AreEqual("1701862149", blah);
         }
+        [TestMethod]
+        public void CheckIfCorrectStudentTestCorrectOutput()
+        {
+            // Arrange:
+
+            // Act:
+            var blah = _service.CheckIfCorrectStudent("1701862149", "1");
+            // Assert:
+            Assert.IsTrue(blah);
+        }
+        [TestMethod]
+        [ExpectedExceptionWithMessage(typeof(HttpResponseException), "Processing of the HTTP request resulted in an exception. Please see the HTTP response returned by the 'Response' property of this exception for details.")]
+        public void CheckIfCorrectStudentTestCorrectException() { 
+            // Arrange:
+
+            // Act:
+            _service.CheckIfCorrectStudent("2", "2");
         
+
+        }
     }
 }
