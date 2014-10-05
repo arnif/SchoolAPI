@@ -32,6 +32,7 @@ namespace CoursesAPI.Controllers
 		}
 
         [HttpPost]
+        [Authorize(Roles = "teacher")]
         [Route("projectgroup")]
         public HttpResponseMessage AddProjectGroup(AddProjectGroupViewModel model)
         {
@@ -39,6 +40,7 @@ namespace CoursesAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "teacher")]
         [Route("{courseInstanceID}/project/{projectGroupID}")]
         public HttpResponseMessage AddProject(int courseInstanceID, int projectGroupID, ProjectViewModel model)
         {
@@ -46,6 +48,7 @@ namespace CoursesAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "teacher")]
         [Route("{courseInstanceID}/grade/{projectID}")]
         public HttpResponseMessage AddGradeToProject(int courseInstanceID, int projectID, GradeViewModel model)
         {
@@ -54,6 +57,7 @@ namespace CoursesAPI.Controllers
         }
         
         [HttpGet]
+        [Authorize(Roles = "student,teacher")]
         [Route("{courseInstanceID}/grade/{projectID}/{ssn}")]
         public HttpResponseMessage GetGrades(int courseInstanceID, int projectID, string ssn)
         {
@@ -61,6 +65,7 @@ namespace CoursesAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "student,teacher")]
         [Route("{courseInstanceID}/grades/{projectGroupID}/{ssn}")]
         public HttpResponseMessage GetGradesFromProjectGroup(int courseInstanceID, int projectGroupID, string ssn)
         {
@@ -68,6 +73,7 @@ namespace CoursesAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "student,teacher")]
         [Route("{courseInstanceID}/grades/{ssn}")]
         public HttpResponseMessage GetGradesFromCourse(int courseInstanceID, string ssn)
         {            
@@ -75,6 +81,7 @@ namespace CoursesAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles="teacher")]
         [Route("{courseInstanceID}/grades")]
         public HttpResponseMessage GetAllGradesFromCourse(int courseInstanceID)
         {

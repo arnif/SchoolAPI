@@ -116,9 +116,7 @@ namespace CoursesAPI.Services.Services
             else
             {
                 throw new ArgumentException("Name is not legal (required and max length 64)");
-            }
-            
-           
+            }            
         }
 
         public ProjectDTO AddProject(int courseInstanceID, int projectGroupID, ProjectViewModel model)
@@ -244,14 +242,6 @@ namespace CoursesAPI.Services.Services
 
             var grades = _grades.GetGradesFromStudent(ssn);
             
-            /*
-            var selectedProjects = (from r in _projects.All()
-                    join k in _grades.All() on r.ID equals k.ProjectID
-                    where k.PersonSSN == student.SSN &&
-                    r.ProjectGroupID == projectGroup.ID
-                    select r).ToList();
-             */
-
             List<GradeDTO> allProjects = new List<GradeDTO>();
             float totalWeight = 0;
             float average = 0;
@@ -480,6 +470,5 @@ namespace CoursesAPI.Services.Services
 
             return projectTotalWeight;
         }
-       
     }
 }
