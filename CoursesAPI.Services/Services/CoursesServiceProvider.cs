@@ -474,14 +474,7 @@ namespace CoursesAPI.Services.Services
         public bool CheckIfCorrectStudent(string ssn, string userName)
         {
             var student = _persons.GetPersonBySSN(ssn);
-            if (student.Email.Contains(userName))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return student.Email.Contains(userName);
         }
     }
 }

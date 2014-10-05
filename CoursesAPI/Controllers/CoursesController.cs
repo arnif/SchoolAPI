@@ -206,25 +206,8 @@ namespace CoursesAPI.Controllers
         private String GetUserName(ClaimsPrincipal userClame)
         {
             var principle = User as ClaimsPrincipal;
-            string userName = "";
-
-            dynamic foo = (from c in principle.Identities.First().Claims
-                           select new
-                           {
-                               c.Type,
-                               c.Value
-                           });
-
-            foreach (Object f in foo)
-            {
-                if (f.ToString().Contains("name"))
-                {
-                    userName = f.ToString().Substring(23);
-                    userName = userName.TrimEnd('}', ' ');
-                }
-
-            }
-            return userName;
+            var student = (from st in principle.Identities.First().Claims.Where(s => s.Type == "name") select st.Value).SingleOrDefault();
+            return student;
         }
 	}
 }
