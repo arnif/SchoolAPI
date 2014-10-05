@@ -21,7 +21,6 @@ namespace CoursesAPI.Tests.Services
 
         private int courseInstanceID;
         private int projectGroupID;
-        private ProjectViewModel model;
 
         [TestInitialize]
         public void Setup()
@@ -32,23 +31,19 @@ namespace CoursesAPI.Tests.Services
 
             this.courseInstanceID = 1;
             this.projectGroupID = 1;
-            this.model = new ProjectViewModel();
-            this.model.Name = "TTT";
-            this.model.MinGradeToPassCourse = 1;
-            this.model.Weight = 1;
-            this.model.OnlyHigherThanProjectID = 1;
+            
 
             var project = new List<Project>
             {
                 new Project
                 {
-                    ID = this.courseInstanceID,
-                    Name = this.model.Name,
-                    ProjectGroupID = this.projectGroupID,
-                    CourseInstanceID = this.courseInstanceID,
+                    ID = 1,
+                    Name = "1",
+                    ProjectGroupID = 1,
+                    CourseInstanceID = 1,
                     OnlyIfHigherThanProjectID = 1,
                     Weight = 1,
-                    MinGradeToPassCourse=4,
+                    MinGradeToPassCourse = 1,
                     
 
                 }
@@ -84,7 +79,15 @@ namespace CoursesAPI.Tests.Services
                     PersonSSN = "1",
                 }
             };
-
+            var courseStudent = new List<CourseStudent> { 
+                new CourseStudent{
+                    ID = 1,
+                    SSN = "1",
+                    CourseInstanceID = 1,
+                    Status = 1,
+                }
+            };
+            _uow.SetRepositoryData(courseStudent);
             _uow.SetRepositoryData(grade);
             _uow.SetRepositoryData(person);
             _uow.SetRepositoryData(projectGroup);
@@ -92,7 +95,6 @@ namespace CoursesAPI.Tests.Services
             _uow.SetRepositoryData(course);
 
         }
-
         [TestMethod]
         [ExpectedExceptionWithMessage(typeof(ArgumentException), "Name is not legal (required and max length 64)")]
         public void AddToProjectGroupTestNameEqualsNull()
@@ -121,7 +123,6 @@ namespace CoursesAPI.Tests.Services
             // Act:
             _service.AddToProjectGroup(temp);
         }
-
         [TestMethod]
         public void AddToProjectGroupTestCorrectOutput()
         {
@@ -137,16 +138,14 @@ namespace CoursesAPI.Tests.Services
             Assert.AreEqual(temp.Name, blah.Name);
             Assert.AreEqual(temp.GradedProjectsCount, blah.GradedProjectsCount);
         }
-
         [TestMethod]
         [ExpectedExceptionWithMessage(typeof(ArgumentException), "Project group not found, maybe you have not created it?")]
         public void AddProjectTestProjectGroupIsNull()
         {
             // Arrange:
-            int courseInstanceID = 1;
-            int projectGroupID = -1;
+            this.courseInstanceID = 1;
+            this.projectGroupID = -1; // This ID will cause an exception being thrown.
             ProjectViewModel model = new ProjectViewModel();
-
 
             // Act:
             _service.AddProject(courseInstanceID, projectGroupID, model);
@@ -155,6 +154,12 @@ namespace CoursesAPI.Tests.Services
         public void AddProjectTestCorrectOutput()
         {
             // Arrange:
+            ProjectViewModel model = new ProjectViewModel();
+            model = new ProjectViewModel();
+            model.Name = "TTT";
+            model.MinGradeToPassCourse = 1;
+            model.Weight = 1;
+            model.OnlyHigherThanProjectID = 1;
 
             // Act:
             var blah = _service.AddProject(courseInstanceID, projectGroupID, model);
@@ -170,15 +175,16 @@ namespace CoursesAPI.Tests.Services
             model.Grade = 10;
             model.SSN = "1";
 
-
-
             // Act:
+                // Count the number of grades before adding a new grade.
             var firstCount = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList.Count;
+                // Add the new grade.
             _service.AddGradeToProject(1, 1, model);
+                // Count the number of grades again.
             float secondCount = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList.Count;
 
             // Assert:
-
+                // Check if the number of grades has risen.
             Assert.AreEqual(++firstCount, secondCount);
 
         }
@@ -186,29 +192,50 @@ namespace CoursesAPI.Tests.Services
         public void GetGradesTestCorrectOutput()
         {
             // Arrange:
-
+            var ssn = "1";
 
             // Act:
-            GradeDTO bla = _service.GetGrades(1, 1, "1");
+            GradeDTO bla = _service.GetGrades(courseInstanceID, projectGroupID, ssn);
 
             // Assert:
 
-            Assert.AreEqual("1", bla.SSN);
+            Assert.AreEqual(ssn, bla.SSN);
 
         }
+        [TestMethod]
         public void GetAllGradesFromProjectGroupTestCorrectOutput()
         {
             // Arrange:
-
-
+            
             // Act:
-            var blah = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList.GetEnumerator().Current.SSN;
-
+            var blah = _service.GetAllGradesFromProjectGroup(1, 1, "1").GradeList[0].SSN;
 
             // Assert:
             Assert.AreEqual("1", blah);
-
-
         }
+        [TestMethod]
+        public void NewGetGradesFromCourseTestCorrectOutput()
+        { 
+            // Arrange:
+
+            // Act:
+                // Retrieve the SSN of the person with the grade.
+            var blah = _service.NewGetGradesFromCourse(1, "1").Person.SSN;
+
+            // Assert:
+            Assert.AreEqual("1", blah);
+        }
+        [TestMethod]
+        public void GetGradesFromAllStudentsInCourseTestCorrectOutput()
+        { 
+            // Arrange:
+
+            // Act:
+                // Retrieve the SSN of the student with the first grade.
+            var blah = _service.GetGradesFromAllStudentsInCourse(1)[0].Person.SSN;
+            // Assert:
+            Assert.AreEqual("1", blah);
+        }
+        
     }
 }
